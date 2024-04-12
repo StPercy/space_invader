@@ -118,7 +118,7 @@ function createKeys(keyboard) {
 	dKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, true, true);
 	spacebar = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, true, true);
 }
-
+// checkMovement wird erstellt um zu überprüfen wo der Spieler sich momentan befindet und welche Taste gedrückt wurde
 function checkMovement() {
 	if (aKey.isDown && !dKey.isDown) {
 		player.x > 30 ? player.setVelocityX(-300) : player.setVelocityX(0);
