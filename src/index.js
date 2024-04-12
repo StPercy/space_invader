@@ -23,6 +23,9 @@ let enemyStep = 20;	// 20px
 let time = 0; // Zeit in ms
 let gameOver = false;
 let bullet;
+let enemyCount	= 55;
+let scoreText;
+let score = 0;
 
 function preload() {
 	this.load.image('background', 'assets/space_invader/images/space.jpeg');
@@ -41,6 +44,8 @@ function preload() {
 function create() {
 	setPhysics(this.physics);
 	this.add.image(0, 0, 'background').setOrigin(0).setScrollFactor(0);
+
+	scoreText = this.add.text(16, 16, `Score: ${score}`, { fontSize: '32px', fill: '#fff', fontStyle: 'bold' }).setScrollFactor(0);
 
 	this.anims.create({
 		key: 'moveEnemyTop',
@@ -74,6 +79,9 @@ function create() {
 	createKeys(this.input.keyboard);
 	createEnemies();
 	createBullet();
+
+	this.physics.add.collider(bullet, enemies, (bullet, enemy) => handleHitEnemy(bullet, enemy));
+
 }
 
 function update() {
@@ -174,7 +182,7 @@ function checkShoot() {
 			bullet.x = player.x;
 			bullet.y = player.y;
 			bullet.enableBody(true, bullet.x, bullet.y, true, true);
-			bullet.setVelocityY(-500);
+			bullet.setVelocityY(-1000);
 		}
 }
 
@@ -182,4 +190,15 @@ function checkBullet() {
 	if (bullet.active && bullet.y < 0) {
 		bullet.disableBody(true, true);
 	}	
+}
+
+function handleHitEnemy(bullet, enemy) {
+	bullet.disableBody(true, true);
+	enemy.disableBody(true, true);
+	enemyCount--;
+	score += 10;
+	scoreText.setText(`Score: ${score}`);	
+	console.log(enemyCount);
+	if (enemyCount === 0) pauseGame();
+
 }
