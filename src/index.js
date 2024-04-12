@@ -21,6 +21,7 @@ let spacebar;
 let enemies;
 let enemyStep = 20;	// 20px
 let time = 0; // Zeit in ms
+let gameOver = false;
 
 function preload() {
 	this.load.image('background', 'assets/space_invader/images/space.jpeg');
@@ -74,9 +75,10 @@ function create() {
 }
 
 function update() {
+	if (gameOver) return;
 	checkMovement(); 
-	checkEnemyMovement();
 	time++;
+	checkEnemyMovement();
 }
 // physics wird ausgelagert um sich this.physics zu sparen, siehe z.B createPlayer()
 function setPhysics(physic) {
@@ -139,6 +141,7 @@ function checkEnemyMovement() {
 		enemyStep *= -1; // changes direction
 		enemies.children.iterate((enemy) => {
 			enemy.y += 50; // moves enemies down
+			if (enemy.y === player.y) pauseGame();
 		});
 	
 	}
@@ -148,3 +151,10 @@ function checkEnemyMovement() {
 	});
 	
 }	
+
+function pauseGame() {
+	physics.pause();
+	gameOver = true;
+	enemies.children.iterate(enemy => enemy.anims.stop());
+	console.log('Game Over');
+}
