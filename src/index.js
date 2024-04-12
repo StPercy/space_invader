@@ -18,6 +18,7 @@ let player;
 let aKey;
 let dKey;
 let spacebar;
+let enemies;
 
 function preload() {
 	this.load.image('background', 'assets/space_invader/images/space.jpeg');
@@ -38,6 +39,7 @@ function create() {
 	this.add.image(0, 0, 'background').setOrigin(0).setScrollFactor(0);
 	createPlayer();
 	createKeys(this.input.keyboard);
+	createEnemies();
 }
 
 function update() {
@@ -69,4 +71,28 @@ function checkMovement() {
 	if (!aKey.isDown && !dKey.isDown) {
 		player.setVelocityX(0);
 	}
+}
+
+function createEnemies() {
+	enemies = physics.add.group();
+	Array(55).fill().forEach((_, i) => {
+		let enemy
+		if (i < 11) {
+			enemy = enemies.create(calculateEnemySpawnX(i), calculateEnemySpawnY(i), 'enemyTop1');
+			return;
+		}
+		if (i < 33) {
+			enemy = enemies.create(calculateEnemySpawnX(i), calculateEnemySpawnY(i), 'enemyMiddle1');
+			return;
+		}
+		enemy = enemies.create(calculateEnemySpawnX(i), calculateEnemySpawnY(i), 'enemyBottom1');
+	});
+}
+
+function calculateEnemySpawnX(idx) {
+	return 80 * (idx +1) - 80 * 11 * Math.floor(idx / 11);
+}
+
+function calculateEnemySpawnY(idx) {
+	return 100 + 50 * Math.floor(idx / 11);
 }
