@@ -87,8 +87,11 @@ function create() {
 	createHouses();
 	missiles = this.physics.add.group();
 
+	this.physics.add.collider(player, enemies, () => pauseGame());
 	this.physics.add.collider(bullet, enemies, (bullet, enemy) => handleHitEnemy(bullet, enemy));
 	this.physics.add.collider(player, missiles, (player, missile) => handleHitPlayer(player, missile));
+	this.physics.add.collider(bullet, walls, (bullet, wall) => handleHitWall(bullet, wall));	
+	this.physics.add.collider(missiles, walls, (missile, wall) => handleHitWall(missile, wall));	
 }
 
 function update() {
@@ -277,4 +280,14 @@ function createHouseAt(x, y = 600 ) {
 	walls.create(x + 120, y - 20, 'block');
 	walls.create(x + 150, y - 20, 'block');
 	walls.create(x + 120, y - 40, 'block');
+}
+
+function handleHitWall(bullet, wall) {
+	bullet.disableBody(true, true);
+	if (wall.new) {
+		wall.setTexture('blockHit');
+		wall.new = false;
+	} else {
+		wall.disableBody(true, true);
+	}
 }
