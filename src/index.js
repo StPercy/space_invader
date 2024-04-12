@@ -22,6 +22,7 @@ let enemies;
 let enemyStep = 20;	// 20px
 let time = 0; // Zeit in ms
 let gameOver = false;
+let bullet;
 
 function preload() {
 	this.load.image('background', 'assets/space_invader/images/space.jpeg');
@@ -72,6 +73,7 @@ function create() {
 	createPlayer();
 	createKeys(this.input.keyboard);
 	createEnemies();
+	createBullet();
 }
 
 function update() {
@@ -79,6 +81,8 @@ function update() {
 	checkMovement(); 
 	time++;
 	checkEnemyMovement();
+	checkShoot();
+	checkBullet();
 }
 // physics wird ausgelagert um sich this.physics zu sparen, siehe z.B createPlayer()
 function setPhysics(physic) {
@@ -157,4 +161,25 @@ function pauseGame() {
 	gameOver = true;
 	enemies.children.iterate(enemy => enemy.anims.stop());
 	console.log('Game Over');
+}
+
+function createBullet() {
+	bullet = physics.add.sprite(0,0, 'bullet');
+	bullet.disableBody(true, true);
+	//bullet.setVelocityY(-300);
+}
+
+function checkShoot() {
+	if (spacebar.isDown && !bullet.active) {
+			bullet.x = player.x;
+			bullet.y = player.y;
+			bullet.enableBody(true, bullet.x, bullet.y, true, true);
+			bullet.setVelocityY(-500);
+		}
+}
+
+function checkBullet() {
+	if (bullet.active && bullet.y < 0) {
+		bullet.disableBody(true, true);
+	}	
 }
