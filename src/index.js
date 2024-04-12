@@ -26,6 +26,10 @@ let bullet;
 let enemyCount	= 55;
 let scoreText;
 let score = 0;
+let missiles;
+let lifeText;
+let lives = 3;
+let walls;
 
 function preload() {
 	this.load.image('background', 'assets/space_invader/images/space.jpeg');
@@ -45,7 +49,8 @@ function create() {
 	setPhysics(this.physics);
 	this.add.image(0, 0, 'background').setOrigin(0).setScrollFactor(0);
 
-	scoreText = this.add.text(16, 16, `Score: ${score}`, { fontSize: '32px', fill: '#fff', fontStyle: 'bold' }).setScrollFactor(0);
+	scoreText = this.add.text(16, 16, `Score: ${score}`, { fontSize: '32px', fill: 'white', fontStyle: 'bold' }).setScrollFactor(0);
+	lifeText = this.add.text(1100, 16, `Lives: ${lives}`, { fontSize: '32px', fill: 'red', fontStyle: 'bold' }).setScrollFactor(0);
 
 	this.anims.create({
 		key: 'moveEnemyTop',
@@ -79,9 +84,11 @@ function create() {
 	createKeys(this.input.keyboard);
 	createEnemies();
 	createBullet();
+	createHouses();
+	missiles = this.physics.add.group();
 
 	this.physics.add.collider(bullet, enemies, (bullet, enemy) => handleHitEnemy(bullet, enemy));
-
+	this.physics.add.collider(player, missiles, (player, missile) => handleHitPlayer(player, missile));
 }
 
 function update() {
@@ -91,6 +98,7 @@ function update() {
 	checkEnemyMovement();
 	checkShoot();
 	checkBullet();
+	checkMissiles();
 }
 // physics wird ausgelagert um sich this.physics zu sparen, siehe z.B createPlayer()
 function setPhysics(physic) {
@@ -160,6 +168,10 @@ function checkEnemyMovement() {
 
 	enemies.children.iterate((enemy) => {
 		enemy.x += enemyStep; // moves enemies left or right
+
+		if (Math.floor(Math.random() * 50) === 42) {
+			launchmissiles(enemy.x, enemy.y);
+		}
 	});
 	
 }	
@@ -168,7 +180,7 @@ function pauseGame() {
 	physics.pause();
 	gameOver = true;
 	enemies.children.iterate(enemy => enemy.anims.stop());
-	console.log('Game Over');
+	//console.log('Game Over');
 }
 
 function createBullet() {
@@ -198,7 +210,71 @@ function handleHitEnemy(bullet, enemy) {
 	enemyCount--;
 	score += 10;
 	scoreText.setText(`Score: ${score}`);	
-	console.log(enemyCount);
+	//console.log(enemyCount);
 	if (enemyCount === 0) pauseGame();
 
+}
+
+function launchmissiles(x, y) {
+	let bullet
+	missiles.children.iterate((missiles) => {
+		if (!missiles.active) {
+			bullet = missiles;
+		}
+	});
+	if (bullet) {
+		bullet.x = x;
+		bullet.y = y;
+		bullet.enableBody(true, bullet.x, bullet.y, true, true);
+		bullet.setVelocityY(100);
+	} else {
+		bullet = missiles.create(x, y, 'bullet');
+		bullet.setVelocityY(100);
+	}
+}
+
+function checkMissiles() {
+	missiles.children.iterate((missile) => {
+		if (missile.active && missile.y > 720) {
+			missile.disableBody(true, true);
+		}
+	});
+	//console.log(missiles);
+}
+
+function handleHitPlayer(player, missile) {
+	missile.disableBody(true, true);
+	player.setVelocityY(0);
+	lifeText.setText(`Lives: ${--lives}`);
+	if (lives === 0) pauseGame();
+}
+
+function createHouses() {
+	walls = physics.add.staticGroup();
+	createHouseAt(127);
+	createHouseAt(419);
+	createHouseAt(711);
+	createHouseAt(1003);
+	walls.children.iterate(wall => {
+		wall.new = true;
+	});
+}
+
+function createHouseAt(x, y = 600 ) {
+	walls.create(x, y, 'block');
+	walls.create(x + 30, y, 'block');
+	walls.create(x, y - 20, 'block');
+	walls.create(x + 30, y-20, 'block');
+	walls.create(x + 30, y - 40, 'block');
+
+	walls.create(x + 60, y - 40, 'block');
+	walls.create(x + 90, y - 40, 'block');
+	walls.create(x + 60, y - 60, 'block');
+	walls.create(x + 90, y - 60, 'block');
+
+	walls.create(x + 120, y, 'block');
+	walls.create(x + 150, y, 'block');
+	walls.create(x + 120, y - 20, 'block');
+	walls.create(x + 150, y - 20, 'block');
+	walls.create(x + 120, y - 40, 'block');
 }
