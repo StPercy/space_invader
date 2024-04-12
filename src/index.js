@@ -19,6 +19,8 @@ let aKey;
 let dKey;
 let spacebar;
 let enemies;
+let enemyStep = 20;	// 20px
+let time = 0; // Zeit in ms
 
 function preload() {
 	this.load.image('background', 'assets/space_invader/images/space.jpeg');
@@ -37,6 +39,35 @@ function preload() {
 function create() {
 	setPhysics(this.physics);
 	this.add.image(0, 0, 'background').setOrigin(0).setScrollFactor(0);
+
+	this.anims.create({
+		key: 'moveEnemyTop',
+		frames: [
+			{ key: 'enemyTop2' },
+			{ key: 'enemyTop1' }
+		],
+		frameRate: 2,
+		repeat: -1
+	});
+	this.anims.create({
+		key: 'moveEnemyMiddle',
+		frames: [
+			{ key: 'enemyMiddle2' },
+			{ key: 'enemyMiddle1' }
+		],
+		frameRate: 2,
+		repeat: -1
+	});
+	this.anims.create({
+		key: 'moveEnemyBottom',
+		frames: [
+			{ key: 'enemyBottom2' },
+			{ key: 'enemyBottom1' }
+		],
+		frameRate: 2,
+		repeat: -1
+	});
+
 	createPlayer();
 	createKeys(this.input.keyboard);
 	createEnemies();
@@ -44,6 +75,8 @@ function create() {
 
 function update() {
 	checkMovement(); 
+	checkEnemyMovement();
+	time++;
 }
 // physics wird ausgelagert um sich this.physics zu sparen, siehe z.B createPlayer()
 function setPhysics(physic) {
@@ -79,13 +112,16 @@ function createEnemies() {
 		let enemy
 		if (i < 11) {
 			enemy = enemies.create(calculateEnemySpawnX(i), calculateEnemySpawnY(i), 'enemyTop1');
+			enemy.anims.play('moveEnemyTop', true);
 			return;
 		}
 		if (i < 33) {
 			enemy = enemies.create(calculateEnemySpawnX(i), calculateEnemySpawnY(i), 'enemyMiddle1');
+			enemy.anims.play('moveEnemyMiddle', true);
 			return;
 		}
 		enemy = enemies.create(calculateEnemySpawnX(i), calculateEnemySpawnY(i), 'enemyBottom1');
+		enemy.anims.play('moveEnemyBottom', true);
 	});
 }
 
@@ -96,3 +132,19 @@ function calculateEnemySpawnX(idx) {
 function calculateEnemySpawnY(idx) {
 	return 100 + 50 * Math.floor(idx / 11);
 }
+
+function checkEnemyMovement() {
+	if (time % 30 !== 0) return; 
+	if (time % (30 * 18) === 0) {
+		enemyStep *= -1; // changes direction
+		enemies.children.iterate((enemy) => {
+			enemy.y += 50; // moves enemies down
+		});
+	
+	}
+
+	enemies.children.iterate((enemy) => {
+		enemy.x += enemyStep; // moves enemies left or right
+	});
+	
+}	
