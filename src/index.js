@@ -1,3 +1,4 @@
+import PreloadScene from './Scenes/PreloadScene.js'
 import GameScene from './Scenes/GameScene.js';
 import MenuScene from './Scenes/MenuScene.js';
 import HihgscoreScene from './Scenes/HighscoreScene.js';
@@ -30,7 +31,7 @@ const config = {
             debug: true,
         },
     },
-    scene: [  new MenuScene(settings),  new HihgscoreScene(settings),new GameScene(settings), new PauseScene(settings)],
+    scene: [ new PreloadScene(), new MenuScene(settings),  new HihgscoreScene(settings), new GameScene(settings), new PauseScene(settings), ],
 	// dont forget to add the settings in brackets !!!
 }	
 

@@ -1,66 +1,42 @@
-class MenuScene extends Phaser.Scene {
-    constructor(settings) {
-        super('MenuScene')
-        this.config = settings
-    }
+import GeneralScene from './GeneralScene.js'
 
-    preload() {
-        this.load.image('background', 'assets/space_invader/images/space.jpeg')
-    }
+class MenuScene extends GeneralScene {
+	constructor(settings) {
+		super('MenuScene', settings)
+	}
 
-    create() {
-        this.add.image(0, 0, 'background').setOrigin(0, 0).setScrollFactor(0)
-        const startButton = this.add
-            .text(this.config.center.x, this.config.center.y - this.config.textSpace, 'Start Game', {
-                fontSize: '32px',
-            })
-            .setOrigin()
-            .setScrollFactor(0)
-            .setInteractive()
-        startButton.on('pointerover', () => {
-            startButton.setStyle({ fill: 'black' })
-        })
-        startButton.on('pointerout', () => {
-            startButton.setStyle({ fill: 'white' })
-        })
-        startButton.on('pointerdown', () => this.scene.start('GameScene'))
+	create() {
+		super.create()
 
-        const highscoreButton = this.add
-            .text(this.config.center.x, this.config.center.y, 'Highscore', {
-                fontSize: '32px',
-            })
-            .setOrigin()
-            .setScrollFactor(0)
-            .setInteractive()
-        highscoreButton.on('pointerover', () => {
-            highscoreButton.setStyle({ fill: 'black' })
-        })
-        highscoreButton.on('pointerout', () => {
-            highscoreButton.setStyle({ fill: 'white' })
-        })
-        highscoreButton.on('pointerdown', () => {
-            this.scene.start('HighscoreScene')
-        })
+        this.setupMusic()
 
-        const exitButton = this.add
-            .text(this.config.center.x, this.config.center.y + this.config.textSpace, 'Exit', {
-                fontSize: '32px',
-            })
-            .setOrigin()
-            .setScrollFactor(0)
-            .setInteractive()
-        exitButton.on('pointerover', () => {
-            exitButton.setStyle({ fill: 'black' })
-        })
-        exitButton.on('pointerout', () => {
-            exitButton.setStyle({ fill: 'white' })
-        })
-        exitButton.on('pointerdown', () => {
-            this.game.destroy(true)
-        })
-    }
+		this.createText({
+			y: this.config.center.y - this.config.textSpace,
+			text: 'Start Game',
+			func: () => this.scene.start('GameScene'),
+		})
 
-    update() {}
+		this.createText({
+			text: 'Highscore',
+			func: () => this.scene.start('HighscoreScene'),
+		})
+
+		this.createText({
+			y: this.config.center.y + this.config.textSpace,
+			text: 'Exit',
+			func: () => this.game.destroy(true),
+		})
+	}
+
+    // setupMusic helper function
+	setupMusic() {
+		if (this.backgroundMusic) {
+			this.backgroundMusic.resume()
+			return
+		}
+		this.backgroundMusic = this.sound.add('themeMusic', { volume: 0.3, loop: true })
+		this.backgroundMusic.play()
+	}
 }
 
 export default MenuScene

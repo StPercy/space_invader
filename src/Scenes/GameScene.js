@@ -1,7 +1,8 @@
-class GameScene extends Phaser.Scene {
+import GeneralScene from './GeneralScene.js'
+
+class GameScene extends GeneralScene {
     constructor(settings) {
-        super('GameScene')
-        this.config = settings
+        super('GameScene', settings)
     }
 
     init() {
@@ -9,38 +10,26 @@ class GameScene extends Phaser.Scene {
         this.setupScene()
     }
 
-    preload() {
-        this.load.image('background', 'assets/space_invader/images/space.jpeg')
-        this.load.image('player', 'assets/space_invader/images/Ship.png')
-        this.load.image('bullet', 'assets/space_invader/images/Bullet.png')
-        this.load.image('enemyTop1', 'assets/space_invader/images/InvaderA1.png')
-        this.load.image('enemyTop2', 'assets/space_invader/images/InvaderA2.png')
-        this.load.image('enemyMiddle1', 'assets/space_invader/images/InvaderB1.png')
-        this.load.image('enemyMiddle2', 'assets/space_invader/images/InvaderB2.png')
-        this.load.image('enemyBottom1', 'assets/space_invader/images/InvaderC1.png')
-        this.load.image('enemyBottom2', 'assets/space_invader/images/InvaderC2.png')
-        this.load.image('block', 'assets/space_invader/images/OkBlock.png')
-        this.load.image('blockHit', 'assets/space_invader/images/WeakBlock.png')
-    }
-
     create() {
-        this.add.image(0, 0, 'background').setOrigin(0, 0).setScrollFactor(0)
-        this.scoreText = this.add
-            .text(this.config.textSpace, this.config.textSpace, 'Score: ' + this.score, { fontSize: '32px' })
-            .setOrigin(0, 0.5)
-            .setScrollFactor(0)
-        this.highscoreText = this.add
-            .text(this.config.center.x, this.config.textSpace, `Highscore ${this.highscore}`, {
-                fontSize: '32px',
-            })
-            .setOrigin()
-            .setScrollFactor(0)
-        this.lifeText = this.add
-            .text(this.config.width - this.config.textSpace, this.config.textSpace, 'Lives: ' + this.lives, {
-                fontSize: '32px',
-            })
-            .setOrigin(1, 0.5)
-            .setScrollFactor(0)
+        super.create()
+        this.scoreText = this.createText({
+            x: this.config.textSpace,
+            y: this.config.textSpace,
+            text: `Score: ${this.score}`,
+            origin: [0, 0.5],
+        })
+
+        this.highscoreText = this.createText({
+            y: this.config.textSpace,
+            text: `Highscore: ${this.highscore}`,
+        })
+
+        this.lifeText = this.createText({
+            x: this.config.width - this.config.textSpace,
+            y: this.config.textSpace,
+            text: `Lives: ${this.lives}`,
+            origin: [1, 0.5],
+        })
 
         this.anims.create({
             key: 'moveEnemyTop',
@@ -62,7 +51,7 @@ class GameScene extends Phaser.Scene {
             frameRate: 2,
             repeat: -1,
         })
-
+        this.createSounds()
         this.createHouses()
         this.createPlayer()
         this.missiles = this.physics.add.group()
@@ -108,6 +97,7 @@ class GameScene extends Phaser.Scene {
         this.enemyCount = 55
         this.gameTime = 0
         this.enemyStep = 20
+        this.sound.get('themeMusic').pause()
     }
 
     createHouses() {
@@ -198,17 +188,25 @@ class GameScene extends Phaser.Scene {
         this.bullet.disableBody(true, true)
     }
 
+    createSounds() {
+        this.playerBulletSound = this.sound.add('playerBullet', { volume: 0.5 })
+        this.playerHitSound = this.sound.add('playerHit', { volume: 0.5 })
+        this.enemyBulletSound = this.sound.add('enemyBullet', { volume: 0.5 })
+        this.enemyHitSound = this.sound.add('enemyHit', { volume: 0.5 })   
+    }
+
     handleHitEnemy(enemy, bullet) {
         enemy.disableBody(true, true)
         bullet.disableBody(true, true)
         this.enemyCount -= 1
         this.score += 10
+        this.enemyHitSound.play()
         if (this.score > this.highscore) {
             this.highscore = this.score
             this.highscoreText.setText(`Highscore ${this.highscore}`)
         }
         this.scoreText.setText('Score: ' + this.score)
-         if (this.enemyCount === 0) this.pauseGame()
+        if (this.enemyCount === 0) this.pauseGame()
     }
 
     handleHitWall(bullet, wall) {
@@ -225,6 +223,7 @@ class GameScene extends Phaser.Scene {
         missile.disableBody(true, true)
         player.setVelocityY(0)
         this.lifeText.setText('Lives: ' + --this.lives)
+        this.playerHitSound.play()
         if (this.lives === 0) this.pauseGame()
     }
 
@@ -246,6 +245,7 @@ class GameScene extends Phaser.Scene {
             this.bullet.y = this.player.y
             this.bullet.enableBody(true, this.bullet.x, this.bullet.y, true, true)
             this.bullet.setVelocityY(-500)
+            this.playerBulletSound.play()
         }
     }
 
@@ -285,9 +285,11 @@ class GameScene extends Phaser.Scene {
             bullet.y = y
             bullet.enableBody(true, bullet.x, bullet.y, true, true)
             bullet.setVelocityY(500)
+            this.enemyBulletSound.play()
         } else {
             let missile = this.missiles.create(x, y, 'bullet')
             missile.setVelocityY(500)
+            this.enemyBulletSound.play()
         }
     }
 
