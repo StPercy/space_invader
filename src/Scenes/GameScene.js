@@ -1,23 +1,12 @@
 class GameScene extends Phaser.Scene {
-    scoreText = ''
-    score = 0
-    lifeText = ''
-    lives = 3
-    walls = null
-    player = null
-    missiles = null
-    enemies = null
-    aKey = null
-    dKey = null
-    spacebar = null
-    bullet = null
-    gameOver = false
-    enemyCount = 55
-    gameTime = 0
-    enemyStep = 20
-
-    constructor() {
+    constructor(settings) {
         super('GameScene')
+        this.config = settings
+    }
+
+    init() {
+        this.highscore = this.registry.get('highscore') || 0
+        this.setupScene()
     }
 
     preload() {
@@ -37,10 +26,20 @@ class GameScene extends Phaser.Scene {
     create() {
         this.add.image(0, 0, 'background').setOrigin(0, 0).setScrollFactor(0)
         this.scoreText = this.add
-            .text(16, 16, 'Score: ' + this.score, { fontSize: '32px' })
+            .text(this.config.textSpace, this.config.textSpace, 'Score: ' + this.score, { fontSize: '32px' })
+            .setOrigin(0, 0.5)
+            .setScrollFactor(0)
+        this.highscoreText = this.add
+            .text(this.config.center.x, this.config.textSpace, `Highscore ${this.highscore}`, {
+                fontSize: '32px',
+            })
+            .setOrigin()
             .setScrollFactor(0)
         this.lifeText = this.add
-            .text(1100, 16, 'Lives: ' + this.lives, { fontSize: '32px' })
+            .text(this.config.width - this.config.textSpace, this.config.textSpace, 'Lives: ' + this.lives, {
+                fontSize: '32px',
+            })
+            .setOrigin(1, 0.5)
             .setScrollFactor(0)
 
         this.anims.create({
@@ -97,7 +96,18 @@ class GameScene extends Phaser.Scene {
         this.checkShoot()
         this.checkBullet()
         this.checkEnemyMovement()
-        console.log(this.gameTime)  
+        this.checkEscape()
+    }
+
+    setupScene() {
+        this.scoreText = ''
+        this.score = 0
+        this.lifeText = ''
+        this.lives = 3
+        this.gameOver = false
+        this.enemyCount = 55
+        this.gameTime = 0
+        this.enemyStep = 20
     }
 
     createHouses() {
@@ -139,33 +149,33 @@ class GameScene extends Phaser.Scene {
         this.enemies = this.physics.add.group()
         Array(55)
             .fill()
-                .forEach((_, i) => {
-                    let enemy
-                    if (i < 11) {
+            .forEach((_, i) => {
+                let enemy
+                if (i < 11) {
                     enemy = this.enemies.create(
                         this.calculeteEnemySpawnX(i),
                         this.calculeteEnemySpawnY(i),
                         'enemyTop1',
                     )
                     enemy.anims.play('moveEnemyTop')
-                        return
-                    }
-                    if (i < 33) {
-                        enemy = this.enemies.create(
-                            this.calculeteEnemySpawnX(i),
-                            this.calculeteEnemySpawnY(i),
-                            'enemyMiddle1',
-                        )
-                        enemy.anims.play('moveEnemyMiddle')
-                        return
-   			}
-                        enemy = this.enemies.create(
-                            this.calculeteEnemySpawnX(i),
-                            this.calculeteEnemySpawnY(i),
-                            'enemyBottom1',
-                        )
-                        enemy.anims.play('moveEnemyBottom')
-                })
+                    return
+                }
+                if (i < 33) {
+                    enemy = this.enemies.create(
+                        this.calculeteEnemySpawnX(i),
+                        this.calculeteEnemySpawnY(i),
+                        'enemyMiddle1',
+                    )
+                    enemy.anims.play('moveEnemyMiddle')
+                    return
+                }
+                enemy = this.enemies.create(
+                    this.calculeteEnemySpawnX(i),
+                    this.calculeteEnemySpawnY(i),
+                    'enemyBottom1',
+                )
+                enemy.anims.play('moveEnemyBottom')
+            })
     }
 
     calculeteEnemySpawnY(idx) {
@@ -180,6 +190,7 @@ class GameScene extends Phaser.Scene {
         this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, true, true)
         this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, true, true)
         this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
+        this.escape = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC)
     }
 
     createBullet() {
@@ -187,19 +198,17 @@ class GameScene extends Phaser.Scene {
         this.bullet.disableBody(true, true)
     }
 
-    pauseGame() {
-        this.physics.pause()
-        this.gameOver = true
-        this.enemies.children.iterate(enemy => enemy.anims.stop())
-    }
-
     handleHitEnemy(enemy, bullet) {
         enemy.disableBody(true, true)
         bullet.disableBody(true, true)
         this.enemyCount -= 1
         this.score += 10
+        if (this.score > this.highscore) {
+            this.highscore = this.score
+            this.highscoreText.setText(`Highscore ${this.highscore}`)
+        }
         this.scoreText.setText('Score: ' + this.score)
-        if (this.enemyCount === 0) this.pauseGame()
+         if (this.enemyCount === 0) this.pauseGame()
     }
 
     handleHitWall(bullet, wall) {
@@ -233,10 +242,10 @@ class GameScene extends Phaser.Scene {
 
     checkShoot() {
         if (this.spacebar.isDown && !this.bullet.active) {
-        this.bullet.x = this.player.x
-        this.bullet.y = this.player.y
-        this.bullet.enableBody(true, this.bullet.x, this.bullet.y, true, true)
-        this.bullet.setVelocityY(-500)
+            this.bullet.x = this.player.x
+            this.bullet.y = this.player.y
+            this.bullet.enableBody(true, this.bullet.x, this.bullet.y, true, true)
+            this.bullet.setVelocityY(-500)
         }
     }
 
@@ -288,6 +297,16 @@ class GameScene extends Phaser.Scene {
                 missile.disableBody(true, true)
             }
         })
+    }
+
+    checkEscape() {
+        if (this.escape.isDown) this.pauseGame()
+    }
+
+    pauseGame() {
+        this.registry.set('highscore', this.highscore)
+        this.scene.pause()
+        this.scene.launch('PauseScene')
     }
 }
 

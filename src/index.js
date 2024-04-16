@@ -1,6 +1,7 @@
 import GameScene from './Scenes/GameScene.js';
 import MenuScene from './Scenes/MenuScene.js';
 import HihgscoreScene from './Scenes/HighscoreScene.js';
+import PauseScene from './Scenes/PauseScene.js';
 
 const WIDTH = 1280
 const HEIGHT = 720
@@ -29,7 +30,8 @@ const config = {
             debug: true,
         },
     },
-    scene: [new MenuScene(settings), new HihgscoreScene(settings), new GameScene()],
+    scene: [  new MenuScene(settings),  new HihgscoreScene(settings),new GameScene(settings), new PauseScene(settings)],
+	// dont forget to add the settings in brackets !!!
 }	
 
 new Phaser.Game(config);
