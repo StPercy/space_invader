@@ -17,7 +17,7 @@ class GameScene extends GeneralScene {
             y: this.config.textSpace,
             text: `Score: ${this.score}`,
             origin: [0, 0.5],
-        })
+    })
 
         this.highscoreText = this.createText({
             y: this.config.textSpace,
@@ -59,7 +59,7 @@ class GameScene extends GeneralScene {
         this.createKeys()
         this.createBullet()
 
-        this.physics.add.collider(this.player, this.enemies, () => this.pauseGame())
+        this.physics.add.collider(this.player, this.enemies, () => this.pauseGame(true))
 
         this.physics.add.collider(this.enemies, this.bullet, (enemy, bullet) =>
             this.handleHitEnemy(enemy, bullet),
@@ -192,21 +192,35 @@ class GameScene extends GeneralScene {
         this.playerBulletSound = this.sound.add('playerBullet', { volume: 0.5 })
         this.playerHitSound = this.sound.add('playerHit', { volume: 0.5 })
         this.enemyBulletSound = this.sound.add('enemyBullet', { volume: 0.5 })
-        this.enemyHitSound = this.sound.add('enemyHit', { volume: 0.5 })   
+        this.enemyHitSound = this.sound.add('enemyHit', { volume: 0.5 })
     }
 
-    handleHitEnemy(enemy, bullet) {
-        enemy.disableBody(true, true)
+    handleHitEnemy(bullet, enemy) {
         bullet.disableBody(true, true)
+        enemy.disableBody(true, false)
+
+        this.enemyHitSound.play()
+        const fadeTween = this.tweens.add({
+            targets: enemy,
+            scaleX: 0,
+            scaleY: 0,
+            duration: 500,
+            ease: 'Linear',
+        })
+
+        fadeTween.on('complete', () => this.hideEnemy(enemy))
+    }
+
+    hideEnemy(enemy) {
+        enemy.visible = false
         this.enemyCount -= 1
         this.score += 10
-        this.enemyHitSound.play()
         if (this.score > this.highscore) {
             this.highscore = this.score
             this.highscoreText.setText(`Highscore ${this.highscore}`)
         }
         this.scoreText.setText('Score: ' + this.score)
-        if (this.enemyCount === 0) this.pauseGame()
+        if (this.enemyCount === 0) this.restartGame()
     }
 
     handleHitWall(bullet, wall) {
@@ -224,7 +238,7 @@ class GameScene extends GeneralScene {
         player.setVelocityY(0)
         this.lifeText.setText('Lives: ' + --this.lives)
         this.playerHitSound.play()
-        if (this.lives === 0) this.pauseGame()
+        if (this.lives === 0) this.pauseGame(true)
     }
 
     checkMovement() {
@@ -234,7 +248,11 @@ class GameScene extends GeneralScene {
         if (this.dKey.isDown && !this.aKey.isDown) {
             this.player.x < 1250 ? this.player.setVelocityX(300) : this.player.setVelocityX(0)
         }
-        if (!this.aKey.isDown && !this.dKey.isDown) {
+        if (
+            (!this.aKey.isDown && !this.dKey.isDown) ||
+            (this.dKey.isDown && this.player.x > 1250) ||
+            (this.aKey.isDown && this.player.x < 30)
+        ) {
             this.player.setVelocityX(0)
         }
     }
@@ -261,7 +279,7 @@ class GameScene extends GeneralScene {
             this.enemyStep *= -1
             this.enemies.children.iterate(enemy => {
                 enemy.y += 50
-                enemy.y >= this.player.y ? this.pauseGame() : null
+                enemy.active && enemy.y >= this.player.y ? this.pauseGame(true) : null
             })
         }
 
@@ -305,10 +323,33 @@ class GameScene extends GeneralScene {
         if (this.escape.isDown) this.pauseGame()
     }
 
-    pauseGame() {
+    pauseGame(gameOver = false) {
         this.registry.set('highscore', this.highscore)
         this.scene.pause()
-        this.scene.launch('PauseScene')
+        this.scene.launch('PauseScene', { gameOver })
+    }
+
+    restartGame() {
+        this.enemyCount = 55
+        this.gameTime = 0
+        this.enemyStep = 20
+        this.reactivateEnemies()
+    }
+
+    reactivateEnemies() {
+        this.enemies.children.iterate((enemy, i) => {
+            enemy.enableBody(true, this.calculeteEnemySpawnX(i), this.calculeteEnemySpawnY(i), true, true)
+            enemy.setScale(1)
+            if (i < 11) {
+                enemy.anims.play('moveEnemyTop')
+                return
+            }
+            if (i < 33) {
+                enemy.anims.play('moveEnemyMiddle')
+                return
+            }
+            enemy.anims.play('moveEnemyBottom')
+        })
     }
 }
 

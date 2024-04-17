@@ -1,11 +1,11 @@
 import GeneralScene from './GeneralScene.js'
+
 class PauseScene extends GeneralScene {
     constructor(settings) {
         super('PauseScene', settings)
-      
     }
 
-    create() {
+    create({ gameOver }) {
         this.cameras.main.setBackgroundColor('rgba(3, 47, 62, 0.6)')
 
         this.createText({
@@ -13,10 +13,22 @@ class PauseScene extends GeneralScene {
             func: () => this.backToMenu(),
         })
 
-        this.createText({
+        gameOver ? this.addGameOver() : this.addBackButton()
+    }
+
+    addBackButton() {
+        this.backButton = this.createText({
             y: this.config.height - this.config.textSpace,
             text: 'Back',
             func: () => this.backToGame(),
+        })
+    }
+
+    addGameOver() {
+        this.backButton && (this.backButton.visible = false)
+        this.createText({
+            y: this.config.center.y - this.config.textSpace,
+            text: 'Game Over',
         })
     }
 
@@ -30,6 +42,5 @@ class PauseScene extends GeneralScene {
         this.scene.resume('GameScene')
     }
 }
-
 
 export default PauseScene

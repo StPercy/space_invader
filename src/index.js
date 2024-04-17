@@ -31,7 +31,7 @@ const config = {
             debug: true,
         },
     },
-    scene: [ new PreloadScene(), new MenuScene(settings),  new HihgscoreScene(settings), new GameScene(settings), new PauseScene(settings), ],
+    scene: [ new PreloadScene(settings), new MenuScene(settings),  new HihgscoreScene(settings), new GameScene(settings), new PauseScene(settings), ],
 	// dont forget to add the settings in brackets !!!
 }	
 
